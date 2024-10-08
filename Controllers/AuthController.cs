@@ -14,15 +14,18 @@ namespace LinkUpSercice.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
             IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
@@ -41,6 +44,32 @@ namespace LinkUpSercice.Controllers
 
             if (result.Succeeded)
             {
+                // Assign the "Applicant" role by default
+                await _userManager.AddToRoleAsync(user, "Applicant");
+                return Ok(new { Message = "User created successfully" });
+            }
+
+            return BadRequest(new { Errors = result.Errors });
+        }
+
+
+        [HttpPost("signup/admin")]
+        public async Task<IActionResult> SignUpAdmin([FromBody] SignUpModel model)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                // Assign the "Applicant" role by default
+                await _userManager.AddToRoleAsync(user, "Admin");
                 return Ok(new { Message = "User created successfully" });
             }
 
@@ -67,14 +96,22 @@ namespace LinkUpSercice.Controllers
             return Ok(new { Message = "Logged out successfully" });
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
+            var userRoles = await _userManager.GetRolesAsync(user);
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
+
+            // Add roles to claims
+            foreach (var role in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -6,5 +6,6 @@ namespace LinkUpSercice.Models
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        // Roles will be managed by IdentityRole, so we don't need to add a property here
     }
 }
