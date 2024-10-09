@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using LinkUpSercice.Models;
+using LinkUpSercice.Data;
 
 namespace LinkUpSercice
 {
