@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using LinkUpSercice.Models;
 using LinkUpSercice.Data;
+using LinkUpSercice.Services.Interfaces;
+using LinkUpSercice.Services;
 
 namespace LinkUpSercice
 {
@@ -56,6 +58,9 @@ namespace LinkUpSercice
                                       .AllowAnyHeader()
                                       .AllowAnyMethod());
             });
+
+            // Register IJobService and JobService
+            builder.Services.AddScoped<IJobService, JobService>();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
